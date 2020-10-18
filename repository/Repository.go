@@ -564,7 +564,7 @@ func DoesColumnExistInTable(uow *UnitOfWork, tableName string, ColumnName string
 }
 
 // CreateOrderByString get order by string
-func (service *BaseServiceImpl) CreateOrderByString(orderByAttrs []string, validOrderByAttrs []string, orderByAttrAndDBCloum map[string][]string) (string, error) {
+func CreateOrderByString(orderByAttrs []string, validOrderByAttrs []string, orderByAttrAndDBCloum map[string][]string) (string, error) {
 
 	retOrderByStr := ""
 	validOrderByAttrsAsMap := make(map[string]bool)
