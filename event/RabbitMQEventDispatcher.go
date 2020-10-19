@@ -201,10 +201,14 @@ func dialAMQP(connectionString string, isTLS bool, logger *zerolog.Logger) (*amq
 
 	if ca, err := ioutil.ReadFile(caCertPath); err == nil {
 		cfg.RootCAs.AppendCertsFromPEM(ca)
+	} else {
+		return nil, err
 	}
 
 	if cert, err := tls.LoadX509KeyPair(clientCertPath, clientCertKeyPath); err == nil {
 		cfg.Certificates = append(cfg.Certificates, cert)
+	} else {
+		return nil, err
 	}
 
 	return amqp.DialTLS(connectionString, cfg)
