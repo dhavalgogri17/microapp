@@ -165,32 +165,21 @@ func dialAMQP(connectionString string, isTLS bool, logger *zerolog.Logger) (*amq
 	if isTLS {
 		caCert, _ := os.LookupEnv("ISLA_QUEUE_RMQ_CA_CERT")
 		clientCert, _ := os.LookupEnv("ISLA_QUEUE_RMQ_CERT")
-		clientCertKey, _ := os.LookupEnv("ISLA_QUEUE_RMQ_KEY")
+		clientCertKey, _ := os.LookupEnv("ISLA_QUEUE_RMQ_CERT_KEY")
 
-		fmt.Printf("CA CERT\n%v\n", caCert)
-		fmt.Printf("CLIENT CERT\n%v\n", clientCert)
-		fmt.Printf("CLIENT KEY\n%v\n", clientCertKey)
 		if caCert == "" || clientCert == "" || clientCertKey == "" {
-			fmt.Printf("ERROR 1\n%v\n", "Client certificate not found")
 			return nil, fmt.Errorf("Client certificate not found")
 		}
 
 		cfg = &tls.Config{}
 		cfg.RootCAs = x509.NewCertPool()
-
-		// if _, err := x509.ParseCertificate([]byte(caCert)); err != nil {
-		// 	fmt.Printf("ERROR 2\n%v\n", err)
-		// 	return nil, err
-		// }
 		cfg.RootCAs.AppendCertsFromPEM([]byte(caCert))
 
 		cert, err := tls.X509KeyPair([]byte(clientCert), []byte(clientCertKey))
 		if err != nil {
-			fmt.Printf("ERROR 3\n%v\n", err)
 			return nil, err
 		}
 		cfg.Certificates = append(cfg.Certificates, cert)
-		fmt.Printf("DONE 1")
 	}
 
 	return amqp.DialTLS(connectionString, cfg)
