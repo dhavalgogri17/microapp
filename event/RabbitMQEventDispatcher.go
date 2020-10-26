@@ -184,31 +184,29 @@ func connectToRabbitMQ(logger *zerolog.Logger, connectionString string, isTLS bo
 }
 
 func dialAMQP(connectionString string, isTLS bool, logger *zerolog.Logger) (*amqp.Connection, error) {
-	if !isTLS {
-		return amqp.Dial(connectionString)
-	}
+	var cfg *tls.Config = nil
+	if isTLS {
+		caCert, _ := os.LookupEnv("ISLA_QUEUE_RMQ_CA_CERT")
+		clientCert, _ := os.LookupEnv("ISLA_QUEUE_RMQ_CERT")
+		clientCertKey, _ := os.LookupEnv("ISLA_QUEUE_RMQ_KEY")
 
-	caCertPath, _ := os.LookupEnv("ISLA_QUEUE_CA_CERT_PATH")
-	clientCertPath, _ := os.LookupEnv("ISLA_QUEUE_CLIENT_CERT_PATH")
-	clientCertKeyPath, _ := os.LookupEnv("ISLA_QUEUE_CLIENT_CERT_KEY_PATH")
-	serverName, _ := os.LookupEnv("ISLA_QUEUE_CERT_SERVER_NAME")
+		if caCert == "" || clientCert == "" || clientCertKey == "" {
+			return nil, fmt.Errorf("Client certificate not found")
+		}
 
-	cfg := &tls.Config{
-		ServerName: serverName,
-	}
+		cfg = &tls.Config{}
+		cfg.RootCAs = x509.NewCertPool()
 
-	cfg.RootCAs = x509.NewCertPool()
+		if _, err := x509.ParseCertificate([]byte(caCert)); err != nil {
+			return nil, err
+		}
+		cfg.RootCAs.AppendCertsFromPEM([]byte(caCert))
 
-	if ca, err := ioutil.ReadFile(caCertPath); err == nil {
-		cfg.RootCAs.AppendCertsFromPEM(ca)
-	} else {
-		return nil, err
-	}
-
-	if cert, err := tls.LoadX509KeyPair(clientCertPath, clientCertKeyPath); err == nil {
+		cert, err := tls.X509KeyPair([]byte(clientCert), []byte(clientCertKey))
+		if err != nil {
+			return nil, err
+		}
 		cfg.Certificates = append(cfg.Certificates, cert)
-	} else {
-		return nil, err
 	}
 
 	return amqp.DialTLS(connectionString, cfg)
