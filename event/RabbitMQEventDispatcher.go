@@ -201,10 +201,10 @@ func dialAMQP(connectionString string, isTLS bool, logger *zerolog.Logger) (*amq
 		cfg = &tls.Config{}
 		cfg.RootCAs = x509.NewCertPool()
 
-		if _, err := x509.ParseCertificate([]byte(caCert)); err != nil {
-			fmt.Printf("ERROR 5\n%v\n", err)
-			return nil, err
-		}
+		// if _, err := x509.ParseCertificate([]byte(caCert)); err != nil {
+		// 	fmt.Printf("ERROR 5\n%v\n", err)
+		// 	return nil, err
+		// }
 		cfg.RootCAs.AppendCertsFromPEM([]byte(caCert))
 
 		cert, err := tls.X509KeyPair([]byte(clientCert), []byte(clientCertKey))
